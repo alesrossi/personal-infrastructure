@@ -1,0 +1,45 @@
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - ./nginx/html:/usr/share/nginx/html
+
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    restart: unless-stopped
+    depends_on:
+      - nginx-proxy
+    environment:
+      DEFAULT_EMAIL: alessandro0024@gmail.com
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - ./nginx/html:/usr/share/nginx/html
+      - ./nginx/acme:/etc/acme.sh
+
+  portfolio:
+    build:
+      context: ./portfolio
+      dockerfile: Dockerfile
+    image: personal-infrastructure/portfolio:latest
+    container_name: portfolio
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      VIRTUAL_HOST: alessandrorossi.tech,www.alessandrorossi.tech
+      VIRTUAL_PORT: 3000
+      LETSENCRYPT_HOST: alessandrorossi.tech,www.alessandrorossi.tech
+      LETSENCRYPT_EMAIL: you@example.com
+    expose:
+      - "3000"
