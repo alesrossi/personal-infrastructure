@@ -3,6 +3,8 @@ services:
     image: nginxproxy/nginx-proxy:alpine
     container_name: nginx-proxy
     restart: unless-stopped
+    labels:
+      - com.github.nginx-proxy.nginx=true
     ports:
       - "80:80"
       - "443:443"
@@ -19,6 +21,7 @@ services:
     depends_on:
       - nginx-proxy
     environment:
+      NGINX_PROXY_CONTAINER: nginx-proxy
       DEFAULT_EMAIL: alessandro0024@gmail.com
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -40,6 +43,6 @@ services:
       VIRTUAL_HOST: alessandrorossi.tech,www.alessandrorossi.tech
       VIRTUAL_PORT: 3000
       LETSENCRYPT_HOST: alessandrorossi.tech,www.alessandrorossi.tech
-      LETSENCRYPT_EMAIL: you@example.com
+      LETSENCRYPT_EMAIL: alessandro0024@gmail.com
     expose:
       - "3000"
