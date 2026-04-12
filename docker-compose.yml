@@ -46,3 +46,35 @@ services:
       LETSENCRYPT_EMAIL: alessandro0024@gmail.com
     expose:
       - "3000"
+
+  cinema:
+    image: alesrossi/cinema:latest
+    container_name: cinema
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      VIRTUAL_HOST: cinema-roma.alessandrorossi.tech
+      VIRTUAL_PORT: 3000
+      LETSENCRYPT_HOST: cinema-roma.alessandrorossi.tech
+      LETSENCRYPT_EMAIL: alessandro0024@gmail.com
+    expose:
+      - "3000"
+    volumes:
+      - cinema-data:/app/data
+
+  cinema-scraper:
+    image: alesrossi/cinema:latest
+    container_name: cinema-scraper
+    restart: unless-stopped
+    command: >
+      sh -c "npm run scrape &&
+              while true; do                                                                                                                                                                                                       
+                sleep 86400
+                npm run scrape                                                                                                                                                                                                     
+              done"
+    volumes:
+      - cinema-data:/app/data
+
+volumes:
+  cinema-data:
