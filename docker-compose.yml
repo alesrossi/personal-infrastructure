@@ -68,16 +68,13 @@ services:
     container_name: cinema-scraper
     restart: unless-stopped
     command: >
-      sh -c "npx playwright install chromium &&
-                   npm run scrape &&
-                   while true; do
-                     sleep 86400
-                     npm run scrape
-                   done"
+      sh -c "npm run scrape &&
+              while true; do                                                                                                                                                                                                       
+                sleep 86400
+                npm run scrape                                                                                                                                                                                                     
+              done"
     volumes:
       - cinema-data:/app/data
-      - pw-browsers:/app/pw-browsers
 
 volumes:
   cinema-data:
-  pw-browsers:
