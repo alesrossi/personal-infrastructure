@@ -13,6 +13,8 @@ services:
       - ./nginx/certs:/etc/nginx/certs
       - ./nginx/vhost.d:/etc/nginx/vhost.d
       - ./nginx/html:/usr/share/nginx/html
+    networks:
+      - proxy
 
   acme-companion:
     image: nginxproxy/acme-companion
@@ -29,12 +31,14 @@ services:
       - ./nginx/vhost.d:/etc/nginx/vhost.d
       - ./nginx/html:/usr/share/nginx/html
       - ./nginx/acme:/etc/acme.sh
+    networks:
+      - proxy
 
   portfolio:
     build:
       context: ./portfolio
       dockerfile: Dockerfile
-    image: personal-infrastructure/portfolio:latest
+    image: alesrossi/portfolio:latest
     container_name: portfolio
     restart: unless-stopped
     environment:
@@ -46,35 +50,47 @@ services:
       LETSENCRYPT_EMAIL: alessandro0024@gmail.com
     expose:
       - "3000"
+    networks:
+      - proxy
 
-  cinema:
-    image: alesrossi/cinema:latest
-    container_name: cinema
+  umami_db:
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      NODE_ENV: production
-      PORT: 3000
-      VIRTUAL_HOST: cinema-roma.alessandrorossi.tech
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD}
+    volumes:
+      - umami_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - proxy
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@umami_db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET}
+      VIRTUAL_HOST: umami.felinoir.it
       VIRTUAL_PORT: 3000
-      LETSENCRYPT_HOST: cinema-roma.alessandrorossi.tech
+      LETSENCRYPT_HOST: umami.felinoir.it
       LETSENCRYPT_EMAIL: alessandro0024@gmail.com
     expose:
       - "3000"
-    volumes:
-      - cinema-data:/app/data
+    depends_on:
+      umami_db:
+        condition: service_healthy
+    networks:
+      - proxy
 
-  cinema-scraper:
-    image: alesrossi/cinema:latest
-    container_name: cinema-scraper
-    restart: unless-stopped
-    command: >
-      sh -c "npm run scrape &&
-              while true; do                                                                                                                                                                                                       
-                sleep 86400
-                npm run scrape                                                                                                                                                                                                     
-              done"
-    volumes:
-      - cinema-data:/app/data
+networks:
+  proxy:
+    name: proxy
 
 volumes:
-  cinema-data:
+  umami_data:
