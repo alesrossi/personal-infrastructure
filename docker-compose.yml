@@ -35,21 +35,16 @@ services:
       - proxy
 
   portfolio:
-    build:
-      context: ./portfolio
-      dockerfile: Dockerfile
     image: alesrossi/portfolio:latest
     container_name: portfolio
     restart: unless-stopped
     environment:
-      NODE_ENV: production
-      PORT: 3000
       VIRTUAL_HOST: alessandrorossi.tech,www.alessandrorossi.tech
-      VIRTUAL_PORT: 3000
+      VIRTUAL_PORT: 80
       LETSENCRYPT_HOST: alessandrorossi.tech,www.alessandrorossi.tech
       LETSENCRYPT_EMAIL: alessandro0024@gmail.com
     expose:
-      - "3000"
+      - "80"
     networks:
       - proxy
 
